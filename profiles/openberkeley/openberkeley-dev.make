@@ -20,7 +20,6 @@ projects[openberkeley_admin][subdir] = openberkeley
 projects[openberkeley_admin][download][type] = git
 projects[openberkeley_admin][download][url] = git://github.com/ucb-ist-drupal/openberkeley_admin.git
 
-
 projects[openberkeley_base][type] = module
 projects[openberkeley_base][subdir] = openberkeley
 projects[openberkeley_base][download][type] = git
@@ -143,14 +142,6 @@ projects[nice_menus][subdir] = contrib
 ; Pathologic - Used for dev/test/live/localhost paths
 projects[pathologic][version] = 2.11
 projects[pathologic][subdir] = contrib
-
-; Redirect - Combined path redirect and global redirect for D7
-projects[redirect][version] = 1.x-dev
-projects[redirect][subdir] = contrib
-projects[redirect][download][type] = git
-projects[redirect][download][revision] = 6957f39
-projects[redirect][download][branch] = 7.x-1.x
-projects[redirect][patch][1796596] = https://www.drupal.org/files/redirect-detect_prevent_circular_redirects_patch_and_test-1796596-48.patch
 
 ; Security Review - Part of go-live process
 projects[security_review][version] = 1.0

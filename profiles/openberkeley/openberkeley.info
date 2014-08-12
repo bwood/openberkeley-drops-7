@@ -100,8 +100,6 @@ dependencies[] = features_override
 ; dependencies[] = navigation404  ;TODO: Delete once openberkeley_admin has been tested.
 dependencies[] = nice_menus
 dependencies[] = pathologic
-; dependencies[] = redirect
-
 ; UCB - Recommended (not enabled by default)
 ; dependencies[] = security_review
 
