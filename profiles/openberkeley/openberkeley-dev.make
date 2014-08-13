@@ -127,10 +127,6 @@ projects[features_override][subdir] = contrib
 projects[google_analytics][version] = 1.4
 projects[google_analytics][subdir] = contrib
 
-; Link Checker
-projects[linkchecker][version] = 1.1
-projects[linkchecker][subdir] = contrib
-
 ; Navigation 404
 projects[navigation404][version] = 1.0
 projects[navigation404][subdir] = contrib
