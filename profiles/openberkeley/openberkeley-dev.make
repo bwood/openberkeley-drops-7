@@ -20,7 +20,6 @@ projects[openberkeley_admin][subdir] = openberkeley
 projects[openberkeley_admin][download][type] = git
 projects[openberkeley_admin][download][url] = git://github.com/ucb-ist-drupal/openberkeley_admin.git
 
-
 projects[openberkeley_base][type] = module
 projects[openberkeley_base][subdir] = openberkeley
 projects[openberkeley_base][download][type] = git
@@ -127,10 +126,6 @@ projects[features_override][subdir] = contrib
 ; Google Analytics
 projects[google_analytics][version] = 1.4
 projects[google_analytics][subdir] = contrib
-
-; Link Checker
-projects[linkchecker][version] = 1.1
-projects[linkchecker][subdir] = contrib
 
 ; Navigation 404
 projects[navigation404][version] = 1.0
