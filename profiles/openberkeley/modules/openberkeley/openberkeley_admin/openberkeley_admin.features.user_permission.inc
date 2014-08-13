@@ -72,16 +72,6 @@ function openberkeley_admin_user_default_permissions() {
     'module' => 'admin_menu',
   );
 
-  // Exported permission: 'flush caches'.
-  $permissions['flush caches'] = array(
-    'name' => 'flush caches',
-    'roles' => array(
-      'administrator' => 'administrator',
-      'builder' => 'builder',
-    ),
-    'module' => 'admin_menu',
-  );
-
   // Exported permission: 'edit link settings'.
   $permissions['edit link settings'] = array(
     'name' => 'edit link settings',
@@ -90,6 +80,16 @@ function openberkeley_admin_user_default_permissions() {
       'builder' => 'builder',
     ),
     'module' => 'linkchecker',
+  );
+
+  // Exported permission: 'flush caches'.
+  $permissions['flush caches'] = array(
+    'name' => 'flush caches',
+    'roles' => array(
+      'administrator' => 'administrator',
+      'builder' => 'builder',
+    ),
+    'module' => 'admin_menu',
   );
 
   // Exported permission: 'have total control'.
