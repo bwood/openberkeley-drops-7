@@ -7,8 +7,8 @@ projects[admin_menu][subdir] = contrib
 projects[admin_views][version] = 1.3
 projects[admin_views][subdir] = contrib
 
-;projects[googleanalytics][version] =
-;projects[googleanalytics][subdir] = contrib
+projects[google_analytics][version] = 2.0
+projects[google_analytics][subdir] = contrib
 
 projects[linkchecker][version] = 1.1
 projects[linkchecker][subdir] = contrib
