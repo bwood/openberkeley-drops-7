@@ -124,10 +124,6 @@ projects[extlink][subdir] = contrib
 projects[features_override][version] = 2.0-rc1
 projects[features_override][subdir] = contrib
 
-; Google Analytics
-projects[google_analytics][version] = 1.4
-projects[google_analytics][subdir] = contrib
-
 ; Nice Menus - used with Berkeley Theme
 projects[nice_menus][version] = 2.5
 projects[nice_menus][subdir] = contrib
