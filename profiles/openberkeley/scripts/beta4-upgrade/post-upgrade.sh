@@ -13,6 +13,30 @@ fi
 DRUSH=${DRUSH:-drush}
 DRUSH_OPTS=${DRUSH_OPTS:---strict=0}
 
+# Before proceeding we'll weed out unneeded modules, themes, libraries etc which
+# exist in the site that we are upgrading. This clean up is required if you
+# have used Pantheon Apply Updates to merge in the latest platform code
+SITE_NAME=`echo $ALIAS | cut -d '.' -f2`
+SITE_UUID=`$DRUSH $DRUSH_OPTS psite-uuid $SITE_NAME | cut -d ':' -f 2`
+
+# change to sftp mode
+$DRUSH $DRUSH_OPTS psite-cmode $SITE_UUID dev sftp
+echo -n "Pausing to permit Pantheon server magic..."
+sleep 10
+
+# clean up modules, themes, libraries on the site being upgraded
+cat rrmdir.php | $DRUSH $DRUSH_OPTS $ALIAS scr -
+
+echo -n "..."
+sleep 10
+echo "..."
+# commit the changes resulting from the delete
+$DRUSH $DRUSH_OPTS psite-commit $SITE_UUID dev --message="Remove profiles/panopoly and clean up modules, themes, libraries in preparation for upgrade."
+
+sleep 10
+# change to git mode
+$DRUSH $DRUSH_OPTS psite-cmode $SITE_UUID dev git
+
 # New cache tables. There's known issues with clearing caches before a new cache
 # table can get created, and we do some magic below to work around them.
 NEW_CACHE_TABLES="cache_panels cache_search_api_solr cache_entity_fieldable_panels_pane"
