@@ -22,10 +22,10 @@ SITE_UUID=`$DRUSH $DRUSH_OPTS psite-uuid $SITE_NAME | cut -d ':' -f 2`
 # change to sftp mode
 $DRUSH $DRUSH_OPTS psite-cmode $SITE_UUID dev sftp
 echo -n "Pausing to permit Pantheon server magic..."
-sleep 10
+sleep 30
 
 # clean up modules, themes, libraries on the site being upgraded
-cat rrmdir.php | $DRUSH $DRUSH_OPTS $ALIAS scr -
+cat rrmdir.php rrmdir-post.php | $DRUSH $DRUSH_OPTS $ALIAS scr -
 
 echo -n "..."
 sleep 10
