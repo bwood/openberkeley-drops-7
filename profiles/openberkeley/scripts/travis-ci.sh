@@ -226,5 +226,5 @@ case $COMMAND in
     run_command after_tests
     ;;
 esac
-#
+##
 exit $EXIT_VALUE
