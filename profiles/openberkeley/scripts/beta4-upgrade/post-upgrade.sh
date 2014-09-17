@@ -13,6 +13,14 @@ fi
 DRUSH=${DRUSH:-drush}
 DRUSH_OPTS=${DRUSH_OPTS:---strict=0}
 
+# After some period of time, Pantheon rotates the username/password on the
+# database, so we need to update your Drush aliases. This depends on having
+# installed and authenticated with Terminus:
+#
+#   https://github.com/pantheon-systems/terminus
+#
+$DRUSH $DRUSH_OPTS pantheon-aliases
+
 # Before proceeding we'll weed out unneeded modules, themes, libraries etc which
 # exist in the site that we are upgrading. This clean up is required if you
 # have used Pantheon Apply Updates to merge in the latest platform code
@@ -22,7 +30,7 @@ SITE_UUID=`$DRUSH $DRUSH_OPTS psite-uuid $SITE_NAME | cut -d ':' -f 2`
 # change to sftp mode
 $DRUSH $DRUSH_OPTS psite-cmode $SITE_UUID dev sftp
 echo -n "Pausing to permit Pantheon server magic..."
-sleep 30
+sleep 20
 
 # clean up modules, themes, libraries on the site being upgraded
 cat rrmdir.php rrmdir-post.php | $DRUSH $DRUSH_OPTS $ALIAS scr -
@@ -49,14 +57,6 @@ drush_sqlq() {
   echo "$1" | $MYSQL_CONNECT
 }
 
-# After some period of time, Pantheon rotates the username/password on the
-# database, so we need to update your Drush aliases. This depends on having
-# installed and authenticated with Terminus:
-#
-#   https://github.com/pantheon-systems/terminus
-#
-$DRUSH $DRUSH_OPTS pantheon-aliases
-
 # Switch profile from 'panopoly' to 'openberkeley'. Unfortunately, drush won't
 # be able to bootstrap Drupal ('drush vset' will error out) so we have to set
 # this variable directly in the database.
@@ -71,7 +71,8 @@ done
 
 # Clear the code registry and all caches so Drupal can find the new locations
 # of all modules.
-$DRUSH $DRUSH_OPTS $ALIAS rr
+echo "Running registry rebuild. See /tmp/rr-$ALIAS.out.txt if you want to see the output."
+$DRUSH $DRUSH_OPTS $ALIAS rr &> /tmp/rr-$ALIAS.out.txt
 
 # Drop the new cache tables so they can be created for real in the updates.
 for CACHE_TABLE in $NEW_CACHE_TABLES; do
@@ -88,6 +89,8 @@ $DRUSH $DRUSH_OPTS $ALIAS updb -y
 # the time on Pantheon), running again will re-run those failures.
 $DRUSH $DRUSH_OPTS $ALIAS updb -y
 
+# Make sure Features is enabled
+$DRUSH $DRUSH_OPTS $ALIAS en features -y
 # Revert all Features.
 $DRUSH $DRUSH_OPTS $ALIAS fra -y
 
