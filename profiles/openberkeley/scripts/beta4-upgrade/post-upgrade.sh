@@ -19,7 +19,7 @@ DRUSH_OPTS=${DRUSH_OPTS:---strict=0}
 #
 #   https://github.com/pantheon-systems/terminus
 #
-$DRUSH $DRUSH_OPTS pantheon-aliases
+####### $DRUSH $DRUSH_OPTS pantheon-aliases
 
 # Before proceeding we'll weed out unneeded modules, themes, libraries etc which
 # exist in the site that we are upgrading. This clean up is required if you
@@ -65,9 +65,11 @@ drush_sqlq "UPDATE variable SET value = 's:12:\"openberkeley\";' WHERE name = 'i
 # In a moment, we're going to call 'drush rr' which will clear all caches at
 # the very end. Unfortunately, this will try to clear some new cache tables that
 # haven't been created yet.
+echo "Creating temp cache tables."
 for CACHE_TABLE in $NEW_CACHE_TABLES; do
   drush_sqlq "CREATE TABLE $CACHE_TABLE ( cid VARCHAR(255) NOT NULL PRIMARY KEY, data LONGBLOB, expire INT NOT NULL DEFAULT 0, created INT NOT NULL DEFAULT 0, serialized SMALLINT NOT NULL DEFAULT 0 )"
 done
+
 
 # Clear the code registry and all caches so Drupal can find the new locations
 # of all modules.
@@ -75,22 +77,39 @@ echo "Running registry rebuild. See /tmp/rr-$ALIAS.out.txt if you want to see th
 $DRUSH $DRUSH_OPTS $ALIAS rr &> /tmp/rr-$ALIAS.out.txt
 
 # Drop the new cache tables so they can be created for real in the updates.
+echo "Dropping temp cache tables."
 for CACHE_TABLE in $NEW_CACHE_TABLES; do
   drush_sqlq "DROP TABLE $CACHE_TABLE"
 done
 
 # This is necessary to get the openberkely_update_N() functions to run!
+echo "Changing the profile to openberkeley."
 drush_sqlq "UPDATE system SET status = 1, schema_version = 0 WHERE name = 'openberkeley'"
 
-# Run the update functions.
-$DRUSH $DRUSH_OPTS $ALIAS updb -y
+# Run the update functions upto $UPDB_LIMIT times
+LIMIT=1
+UPDB_MSG="Running database updates"
+echo "*** $UPDB_MSG ***"
+echo "(Ouput might not appear for up to 10 minutes depending on then number of
+faq nodes on the site.)"
+UPDB_LIMIT=10
+UPDB_OUT=`$DRUSH $DRUSH_OPTS $ALIAS updb -y`
+echo "$UPDB_OUT"
+echo ""
+while [[ ! "$UPDB_OUT" =~ "No database updates required" ]] && [[ $LIMIT -lt $UPDB_LIMIT ]]; do
+  UPDB_OUT=`$DRUSH $DRUSH_OPTS $ALIAS updb -y`
+  echo "*** $UPDB_MSG. Run: $LIMIT. (Max: $UPDB_LIMIT) ***"
+  echo "$UPDB_OUT"
+  echo ""
+  (( LIMIT++ ))
+done
 
-# And... run them again! When something fails (which happens some percentage of
-# the time on Pantheon), running again will re-run those failures.
-$DRUSH $DRUSH_OPTS $ALIAS updb -y
 
 # Make sure Features is enabled
+echo "Ensuring that features is enabled..."
 $DRUSH $DRUSH_OPTS $ALIAS en features -y
+$DRUSH $DRUSH_OPTS $ALIAS en features_override -y
+
 # Revert all Features.
 $DRUSH $DRUSH_OPTS $ALIAS fra -y
 
@@ -99,6 +118,7 @@ $DRUSH $DRUSH_OPTS $ALIAS fra -y
 # get the field actually purged.
 $DRUSH $DRUSH_OPTS $ALIAS cron
 $DRUSH $DRUSH_OPTS $ALIAS cron
+
 $DRUSH $DRUSH_OPTS $ALIAS dis -y mediafield || (
   echo
   echo "**"
