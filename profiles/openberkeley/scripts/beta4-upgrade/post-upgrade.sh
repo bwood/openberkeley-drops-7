@@ -10,6 +10,8 @@ if [ x$ALIAS = x ]; then
   exit 1
 fi
 
+GET_ALIASES=$2
+
 DRUSH=${DRUSH:-drush}
 DRUSH_OPTS=${DRUSH_OPTS:---strict=0}
 
@@ -19,7 +21,12 @@ DRUSH_OPTS=${DRUSH_OPTS:---strict=0}
 #
 #   https://github.com/pantheon-systems/terminus
 #
-####### $DRUSH $DRUSH_OPTS pantheon-aliases
+if [[ "$GET_ALIASES" != "--noaliases" ]];then
+ echo "Fetching pantheon aliases.  Disable this with $0 $1 --noaliases"
+ $DRUSH $DRUSH_OPTS pantheon-aliases
+fi
+
+
 
 # Before proceeding we'll weed out unneeded modules, themes, libraries etc which
 # exist in the site that we are upgrading. This clean up is required if you
