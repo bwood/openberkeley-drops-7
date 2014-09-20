@@ -45,3 +45,5 @@ rrmdir("sites/all/libraries", array("profiles/openberkeley/libraries"));
 // Okay if there is no sites/all/libraries
 
 rrmdir("profiles/panopoly");
+// panopoly contrib probably only exits on parking
+rrmdir("profiles/openberkeley/modules/panopoly_contrib");

@@ -10,47 +10,67 @@ if [ x$ALIAS = x ]; then
   exit 1
 fi
 
-GET_ALIASES=$2
+PARAM_TWO=$2
 
 DRUSH=${DRUSH:-drush}
 DRUSH_OPTS=${DRUSH_OPTS:---strict=0}
 
-# After some period of time, Pantheon rotates the username/password on the
-# database, so we need to update your Drush aliases. This depends on having
-# installed and authenticated with Terminus:
-#
-#   https://github.com/pantheon-systems/terminus
-#
-if [[ "$GET_ALIASES" != "--noaliases" ]];then
- echo "Fetching pantheon aliases.  Disable this with $0 $1 --noaliases"
- $DRUSH $DRUSH_OPTS pantheon-aliases
+cleanup() {
+  # Before proceeding we'll weed out unneeded modules, themes, libraries etc which
+  # exist in the site that we are upgrading. This clean up is required if you
+  # have used Pantheon Apply Updates to merge in the latest platform code
+  SITE_NAME=`echo $ALIAS | cut -d '.' -f2`
+  SITE_UUID=`$DRUSH $DRUSH_OPTS psite-uuid $SITE_NAME | cut -d ':' -f 2`
+
+  # change to sftp mode
+  $DRUSH $DRUSH_OPTS psite-cmode $SITE_UUID dev sftp
+  echo -n "Pausing to permit Pantheon server magic..."
+  sleep 20
+
+  # clean up modules, themes, libraries on the site being upgraded
+  cat rrmdir.php rrmdir-post.php | $DRUSH $DRUSH_OPTS $ALIAS scr - && (
+  echo -n "..."
+  sleep 20
+  # commit the changes resulting from the delete
+  $DRUSH $DRUSH_OPTS psite-commit $SITE_UUID dev --message="Remove profiles/panopoly and clean up modules, themes, libraries in preparation for upgrade." || (
+    echo ""
+    echo "This server is sadly unmagical.  Try the following:"
+    echo "1. Visit the site dashboard."
+    echo "2. Ensure the site is in SFTP mode"
+    echo "3. Paste these commands one at a time into your terminal:"
+    echo "cat rrmdir.php rrmdir-post.php | $DRUSH $DRUSH_OPTS $ALIAS scr -"
+    echo "# if that runs with no errors continue"
+    echo "$DRUSH $DRUSH_OPTS psite-commit $SITE_UUID dev --message='Remove profiles/panopoly and clean up modules, themes, libraries in preparation for upgrade.'"
+    echo "# if that runs with no errors continue"
+    echo "$DRUSH $DRUSH_OPTS psite-cmode $SITE_UUID dev git"
+    echo "# if you now see that commit in your commit log on the dashboard, continue by re-running this script like this:"
+    echo "$0 $1 resume"
+    $DRUSH $DRUSH_OPTS psite-dash $SITE_UUID
+    exit
+  )
+)
+  sleep 10
+  # change to git mode
+  $DRUSH $DRUSH_OPTS psite-cmode $SITE_UUID dev git
+}
+
+if [[ "$PARAM_TWO" != "resume" ]];then
+ if [[ "$PARAM_TWO" != "noaliases" ]];then
+  # After some period of time, Pantheon rotates the username/password on the
+  # database, so we need to update your Drush aliases. This depends on having
+  # installed and authenticated with Terminus:
+  #
+  #   https://github.com/pantheon-systems/terminus
+  #
+  echo "Fetching pantheon aliases.  Disable this with $0 $1 noaliases"
+  $DRUSH $DRUSH_OPTS pantheon-aliases
+  fi
+  cleanup
 fi
 
-
-
-# Before proceeding we'll weed out unneeded modules, themes, libraries etc which
-# exist in the site that we are upgrading. This clean up is required if you
-# have used Pantheon Apply Updates to merge in the latest platform code
-SITE_NAME=`echo $ALIAS | cut -d '.' -f2`
-SITE_UUID=`$DRUSH $DRUSH_OPTS psite-uuid $SITE_NAME | cut -d ':' -f 2`
-
-# change to sftp mode
-$DRUSH $DRUSH_OPTS psite-cmode $SITE_UUID dev sftp
-echo -n "Pausing to permit Pantheon server magic..."
-sleep 20
-
-# clean up modules, themes, libraries on the site being upgraded
-cat rrmdir.php rrmdir-post.php | $DRUSH $DRUSH_OPTS $ALIAS scr -
-
-echo -n "..."
-sleep 10
-echo "..."
-# commit the changes resulting from the delete
-$DRUSH $DRUSH_OPTS psite-commit $SITE_UUID dev --message="Remove profiles/panopoly and clean up modules, themes, libraries in preparation for upgrade."
-
-sleep 10
-# change to git mode
-$DRUSH $DRUSH_OPTS psite-cmode $SITE_UUID dev git
+if [[ "$PARAM_TWO" == "noupdate" ]];then
+  exit 0;
+fi
 
 # New cache tables. There's known issues with clearing caches before a new cache
 # table can get created, and we do some magic below to work around them.
@@ -81,7 +101,7 @@ done
 # Clear the code registry and all caches so Drupal can find the new locations
 # of all modules.
 echo "Running registry rebuild. See /tmp/rr-$ALIAS.out.txt if you want to see the output."
-$DRUSH $DRUSH_OPTS $ALIAS rr &> /tmp/rr-$ALIAS.out.txt
+$DRUSH $DRUSH_OPTS $ALIAS rr --fire-bazooka -v &> /tmp/rr-$ALIAS.out.txt
 
 # Drop the new cache tables so they can be created for real in the updates.
 echo "Dropping temp cache tables."
@@ -99,7 +119,7 @@ UPDB_MSG="Running database updates"
 echo "*** $UPDB_MSG ***"
 echo "(Ouput might not appear for up to 10 minutes depending on then number of
 faq nodes on the site.)"
-UPDB_LIMIT=10
+UPDB_LIMIT=6
 UPDB_OUT=`$DRUSH $DRUSH_OPTS $ALIAS updb -y`
 echo "$UPDB_OUT"
 echo ""
